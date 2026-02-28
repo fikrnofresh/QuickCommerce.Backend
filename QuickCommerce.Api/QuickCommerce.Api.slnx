@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="../QuickCommerce.Core/QuickCommerce.Core.csproj" />
+  <Project Path="../QuickCommerce.Infrastructure/QuickCommerce.Infrastructure.csproj" />
+  <Project Path="../QuickCommerce.Tests/QuickCommerce.Tests.csproj" />
+  <Project Path="QuickCommerce.Api.csproj" />
+</Solution>
