@@ -89,5 +89,38 @@ namespace QuickCommerce.Api.Controllers
             await _productRepository.DeleteAsync(product);
             return NoContent();
         }
+        // ACTIVATE PRODUCT
+        [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
+        [HttpPatch("{id}/activate")]
+        public async Task<IActionResult> ActivateProduct(int id)
+        {
+            var product = await _productRepository.GetByIdAsync(id);
+
+            if (product == null)
+                return NotFound();
+
+            product.IsAvailable = true;
+
+            await _productRepository.UpdateAsync(product);
+
+            return Ok(product);
+        }
+
+        // DEACTIVATE PRODUCT
+        [Authorize(Roles = "ADMIN,SUPER_ADMIN")]
+        [HttpPatch("{id}/deactivate")]
+        public async Task<IActionResult> DeactivateProduct(int id)
+        {
+            var product = await _productRepository.GetByIdAsync(id);
+
+            if (product == null)
+                return NotFound();
+
+            product.IsAvailable = false;
+
+            await _productRepository.UpdateAsync(product);
+
+            return Ok(product);
+        }
     }
 }

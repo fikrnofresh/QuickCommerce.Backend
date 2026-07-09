@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using QuickCommerce.Core.DTOs;
+using QuickCommerce.Core.DTOs.Auth;
 using QuickCommerce.Core.Interfaces;
 
 namespace QuickCommerce.Api.Controllers
@@ -10,7 +11,7 @@ namespace QuickCommerce.Api.Controllers
     {
         private readonly IAuthService _authService;
         private readonly IConfiguration _configuration;
-        
+
         public AuthController(
             IAuthService authService,
             IConfiguration configuration)
@@ -26,12 +27,17 @@ namespace QuickCommerce.Api.Controllers
         public async Task<IActionResult> SendOtp([FromBody] LoginRequestDto request)
         {
             if (string.IsNullOrWhiteSpace(request.PhoneNumber))
-                return BadRequest("Phone number is required");
+                return BadRequest(new { message = "Phone number is required" });
 
             try
             {
                 var result = await _authService.SendOtpAsync(request.PhoneNumber);
-                return Ok(new { message = result });
+
+                return Ok(new
+                {
+                    message = "OTP sent successfully",
+                    otp = result // DEV ONLY
+                });
             }
             catch (Exception ex)
             {
@@ -45,41 +51,57 @@ namespace QuickCommerce.Api.Controllers
         [HttpPost("verify-otp")]
         public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpRequestDto request)
         {
+            if (string.IsNullOrWhiteSpace(request.PhoneNumber) ||
+                string.IsNullOrWhiteSpace(request.Otp))
+                return BadRequest(new { message = "Phone number and OTP are required" });
+
             var result = await _authService.VerifyOtpAsync(request.PhoneNumber, request.Otp);
 
             if (result == null)
-                return BadRequest("Invalid OTP");
+                return Unauthorized(new { message = "Invalid or expired OTP" });
 
-            return Ok(new
+            return Ok(new LoginResponseDto
             {
-                accessToken = result.Value.AccessToken,
-                refreshToken = result.Value.RefreshToken,
-                expiresIn = 3600
+                AccessToken = result.Value.AccessToken,
+                RefreshToken = result.Value.RefreshToken,
+                Role = result.Value.Role
             });
         }
 
+        // =========================
+        // REFRESH TOKEN
+        // =========================
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequestDto request)
         {
+            if (string.IsNullOrWhiteSpace(request.RefreshToken))
+                return BadRequest(new { message = "Refresh token is required" });
+
             var newAccessToken = await _authService.RefreshTokenAsync(request.RefreshToken);
 
             if (newAccessToken == null)
-                return Unauthorized("Invalid or expired refresh token");
+                return Unauthorized(new { message = "Invalid or expired refresh token" });
 
             return Ok(new
             {
                 accessToken = newAccessToken,
-                expiresIn = 3600
+                expiresIn = 900
             });
         }
 
+        // =========================
+        // LOGOUT
+        // =========================
         [HttpPost("logout")]
         public async Task<IActionResult> Logout([FromBody] RefreshTokenRequestDto request)
         {
+            if (string.IsNullOrWhiteSpace(request.RefreshToken))
+                return BadRequest(new { message = "Refresh token is required" });
+
             var result = await _authService.LogoutAsync(request.RefreshToken);
 
             if (!result)
-                return BadRequest("Invalid refresh token");
+                return BadRequest(new { message = "Invalid refresh token" });
 
             return Ok(new
             {
@@ -88,6 +110,28 @@ namespace QuickCommerce.Api.Controllers
         }
 
         // =========================
-        
+        // GOOGLE LOGIN (CUSTOMER)
+        // =========================
+        [HttpPost("google-login")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequestDto request)
+        {
+            if (string.IsNullOrWhiteSpace(request.IdToken))
+                return BadRequest(new { message = "IdToken is required" });
+
+            try
+            {
+                var result = await _authService.GoogleLoginAsync(request.IdToken);
+
+                return Ok(new
+                {
+                    accessToken = result.AccessToken,
+                    refreshToken = result.RefreshToken
+                });
+            }
+            catch
+            {
+                return Unauthorized(new { message = "Invalid Google token" });
+            }
+        }
     }
 }
