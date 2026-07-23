@@ -2,6 +2,8 @@
 using QuickCommerce.Core.DTOs;
 using QuickCommerce.Core.DTOs.Auth;
 using QuickCommerce.Core.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace QuickCommerce.Api.Controllers
 {
