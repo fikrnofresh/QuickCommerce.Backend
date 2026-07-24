@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+
 namespace QuickCommerce.Infrastructure.Data
 {
     public class ApplicationDbContext : DbContext
@@ -24,18 +25,44 @@ namespace QuickCommerce.Infrastructure.Data
         public DbSet<Product> Products { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
+        public DbSet<CategoryCommissionRule> CategoryCommissionRules { get; set; }
         public DbSet<Delivery> Deliveries { get; set; }
         public DbSet<DeliveryPartner> DeliveryPartners { get; set; }
         public DbSet<DeliveryPartnerBeat> DeliveryPartnerBeats { get; set; }
         public DbSet<OtpVerification> OtpVerifications { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+
+        public DbSet<AdminSession> AdminSessions { get; set; }
         public DbSet<InventoryMovement> InventoryMovements { get; set; }
+        public DbSet<StoreSettlement> StoreSettlements { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<NotificationRecipient> NotificationRecipients { get; set; }
+        public DbSet<CustomerAddress> CustomerAddresses { get; set; }
 
-        public DbSet<Franchise> Franchises { get; set; }
+        public DbSet<Cart> Carts { get; set; }
+
+        public DbSet<CartItem> CartItems { get; set; }
+
+        public DbSet<Wallet> Wallets { get; set; }
+
+        public DbSet<WalletTransaction> WalletTransactions { get; set; }
+        public DbSet<CustomerActivity> CustomerActivities { get; set; }
+        public DbSet<CustomerSegment> CustomerSegments { get; set; }
+        public DbSet<SupportTicket> SupportTickets { get; set; }
+        public DbSet<OnboardingRequest> OnboardingRequests { get; set; }
+
+        
+
+        // =========================
+        // STORE TABLES
+        // =========================
+
         public DbSet<Store> Stores { get; set; }
+        public DbSet<StoreProduct> StoreProducts { get; set; }
+        public DbSet<UserStore> UserStores { get; set; }
 
-        // 🆕 STORE INVENTORY TABLE
-        public DbSet<StoreProductInventory> StoreProductInventories { get; set; }
 
         // =========================
         // RBAC TABLES
@@ -52,35 +79,20 @@ namespace QuickCommerce.Infrastructure.Data
             base.OnModelCreating(modelBuilder);
 
             // =========================
-            // EXPLICIT TABLE MAPPINGS
+            // TABLE NAMES
             // =========================
 
             modelBuilder.Entity<OtpVerification>()
                 .ToTable("otp_verifications");
 
+            modelBuilder.Entity<User>().ToTable("users");
+            modelBuilder.Entity<Role>().ToTable("role");
+            modelBuilder.Entity<Permission>().ToTable("permission"); 
+            modelBuilder.Entity<RolePermission>().ToTable("role_permission");
+
             modelBuilder.Entity<InventoryMovement>()
                 .ToTable("inventory_movements");
-
-            // =========================
-            // FRANCHISE CONFIG
-            // =========================
-
-            modelBuilder.Entity<Franchise>(entity =>
-            {
-                entity.HasKey(f => f.Id);
-
-                entity.HasIndex(f => f.Code)
-                      .IsUnique();
-
-                entity.Property(f => f.Name).IsRequired();
-                entity.Property(f => f.Code).IsRequired();
-
-                entity.HasMany(f => f.Stores)
-                      .WithOne(s => s.Franchise)
-                      .HasForeignKey(s => s.FranchiseId)
-                      .OnDelete(DeleteBehavior.Restrict);
-            });
-
+            
             // =========================
             // STORE CONFIG
             // =========================
@@ -89,8 +101,7 @@ namespace QuickCommerce.Infrastructure.Data
             {
                 entity.HasKey(s => s.Id);
 
-                entity.HasIndex(s => s.Code)
-                      .IsUnique();
+                entity.HasIndex(s => s.Code).IsUnique();
 
                 entity.Property(s => s.Name).IsRequired();
                 entity.Property(s => s.Code).IsRequired();
@@ -101,18 +112,17 @@ namespace QuickCommerce.Infrastructure.Data
             });
 
             // =========================
-            // 🆕 STORE PRODUCT INVENTORY CONFIG
+            // STORE PRODUCT CONFIG (ENTERPRISE)
             // =========================
 
-            modelBuilder.Entity<StoreProductInventory>(entity =>
+            modelBuilder.Entity<StoreProduct>(entity =>
             {
                 entity.HasKey(e => e.Id);
 
-                entity.HasIndex(e => new { e.StoreId, e.ProductId })
-                      .IsUnique();
+                entity.HasIndex(e => new { e.StoreId, e.ProductId }).IsUnique();
 
                 entity.HasOne(e => e.Store)
-                      .WithMany()
+                      .WithMany(s => s.StoreProducts)
                       .HasForeignKey(e => e.StoreId)
                       .OnDelete(DeleteBehavior.Cascade);
 
@@ -121,6 +131,23 @@ namespace QuickCommerce.Infrastructure.Data
                       .HasForeignKey(e => e.ProductId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
+
+            // =========================
+            // USER-STORE MAPPING
+            // =========================
+
+            modelBuilder.Entity<UserStore>()
+                .HasKey(us => new { us.UserId, us.StoreId });
+
+            modelBuilder.Entity<UserStore>()
+                .HasOne(us => us.User)
+                .WithMany(u => u.UserStores)
+                .HasForeignKey(us => us.UserId);
+
+            modelBuilder.Entity<UserStore>()
+                .HasOne(us => us.Store)
+                .WithMany(s => s.UserStores)
+                .HasForeignKey(us => us.StoreId);
 
             // =========================
             // RBAC CONFIGURATION
@@ -202,16 +229,32 @@ namespace QuickCommerce.Infrastructure.Data
                 .HasForeignKey(d => d.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // =========================
+            // DELIVERY RELATIONS (FIXED)
+            // =========================
+
+            // Internal Agent (User)
             modelBuilder.Entity<Delivery>()
-                .HasOne(d => d.DeliveryPartner)
-                .WithMany(p => p.Deliveries)
-                .HasForeignKey(d => d.DeliveryPartnerId)
+                .HasOne(d => d.InternalAgent)
+                .WithMany()
+                .HasForeignKey(d => d.AssignedToUserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // External Agent (Delivery Partner)
+            modelBuilder.Entity<Delivery>()
+                .HasOne(d => d.ExternalAgent)
+                .WithMany(p => p.Deliveries)
+                .HasForeignKey(d => d.AssignedToPartnerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Indexes
+            modelBuilder.Entity<Delivery>().HasIndex(d => d.AssignedToUserId);
+            modelBuilder.Entity<Delivery>().HasIndex(d => d.AssignedToPartnerId);
 
             modelBuilder.Entity<DeliveryPartnerBeat>()
                 .HasOne(b => b.DeliveryPartner)
                 .WithMany(p => p.Beats)
-                .HasForeignKey(b => b.DeliveryPartnerId)
+                .HasForeignKey(b => b.AssignedToPartnerId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<InventoryMovement>()
@@ -220,25 +263,101 @@ namespace QuickCommerce.Infrastructure.Data
                 .HasForeignKey(im => im.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            
             modelBuilder.Entity<InventoryMovement>()
                 .HasOne(im => im.Store)
                 .WithMany()
                 .HasForeignKey(im => im.StoreId)
                 .OnDelete(DeleteBehavior.Restrict);
-            modelBuilder.Entity<UserStore>()
-    .HasKey(us => new { us.UserId, us.StoreId });
 
-            modelBuilder.Entity<UserStore>()
-                .HasOne(us => us.User)
-                .WithMany(u => u.UserStores)
-                .HasForeignKey(us => us.UserId);
+            // =========================
+            // REFRESH TOKEN CONFIG (CRITICAL)
+            // =========================
 
-            modelBuilder.Entity<UserStore>()
-                .HasOne(us => us.Store)
-                .WithMany(s => s.UserStores)
-                .HasForeignKey(us => us.StoreId);
+            modelBuilder.Entity<RefreshToken>(entity =>
+            {
+                entity.HasKey(rt => rt.Id);
 
+                entity.HasIndex(rt => rt.Token).IsUnique();
+
+                entity.HasOne(rt => rt.User)
+                      .WithMany()
+                      .HasForeignKey(rt => rt.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(rt => rt.Token).IsRequired().HasMaxLength(500);
+
+                entity.Property(rt => rt.DeviceInfo).HasMaxLength(200);
+
+                entity.Property(rt => rt.IpAddress).HasMaxLength(50);
+            });
+
+            // =========================
+            // PASSWORD RESET TOKEN
+            // =========================
+
+            modelBuilder.Entity<PasswordResetToken>(entity =>
+            {
+                entity.HasKey(x => x.Id);
+
+                entity.HasIndex(x => x.Token)
+                      .IsUnique();
+
+                entity.HasOne(x => x.User)
+                      .WithMany()
+                      .HasForeignKey(x => x.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(x => x.Token)
+                      .HasMaxLength(500)
+                      .IsRequired();
+
+                entity.Property(x => x.IpAddress)
+                      .HasMaxLength(50);
+
+                entity.Property(x => x.UserAgent)
+                      .HasMaxLength(300);
+
+                entity.Property(x => x.CreatedBy)
+                      .HasMaxLength(100);
+
+                entity.Property(x => x.Purpose)
+                      .HasMaxLength(50);
+            });
+            // =========================
+            // ADMIN SESSION
+            // =========================
+
+            modelBuilder.Entity<AdminSession>(entity =>
+            {
+                entity.HasKey(x => x.Id);
+
+                entity.HasIndex(x => x.RefreshToken)
+                      .IsUnique();
+
+                entity.HasOne(x => x.User)
+                      .WithMany()
+                      .HasForeignKey(x => x.UserId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(x => x.RefreshToken)
+                      .HasMaxLength(500)
+                      .IsRequired();
+                
+                entity.Property(x => x.DeviceInfo)
+                      .HasMaxLength(200);
+
+                entity.Property(x => x.Browser)
+                      .HasMaxLength(200);
+
+                entity.Property(x => x.OperatingSystem)
+                      .HasMaxLength(200);
+
+                entity.Property(x => x.IpAddress)
+                      .HasMaxLength(50);
+
+                entity.Property(x => x.RevokeReason)
+                      .HasMaxLength(300);
+            });
             // =========================
             // INDEXES
             // =========================
@@ -246,12 +365,12 @@ namespace QuickCommerce.Infrastructure.Data
             modelBuilder.Entity<Order>().HasIndex(o => o.CustomerId);
             modelBuilder.Entity<Order>().HasIndex(o => o.Status);
             modelBuilder.Entity<Delivery>().HasIndex(d => d.OrderId);
-            modelBuilder.Entity<Delivery>().HasIndex(d => d.DeliveryPartnerId);
+            modelBuilder.Entity<NotificationRecipient>()
+    .HasOne(nr => nr.Notification)
+    .WithMany(n => n.Recipients)
+    .HasForeignKey(nr => nr.NotificationId)
+    .OnDelete(DeleteBehavior.Cascade);
         }
-
-        // =========================
-        // UTC SAFE FIX
-        // =========================
 
         public override int SaveChanges()
         {
@@ -259,8 +378,7 @@ namespace QuickCommerce.Infrastructure.Data
             return base.SaveChanges();
         }
 
-        public override async Task<int> SaveChangesAsync(
-            CancellationToken cancellationToken = default)
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             ConvertDateTimesToUtc();
             return await base.SaveChangesAsync(cancellationToken);

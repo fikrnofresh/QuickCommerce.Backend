@@ -1,8 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using QuickCommerce.Core.DTOs;
+using QuickCommerce.Core.DTOs.Customer;
 using QuickCommerce.Core.Entities;
+using QuickCommerce.Core.Enums;
 using QuickCommerce.Core.Interfaces;
 using QuickCommerce.Infrastructure.Data;
+using QuickCommerce.Infrastructure.Services; // 🔥 ADDED
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,36 +19,39 @@ namespace QuickCommerce.Infrastructure.Services
         private readonly IProductRepository _productRepository;
         private readonly DeliveryAssignmentService _deliveryService;
         private readonly ApplicationDbContext _context;
+        private readonly AuditLogService _auditLogService; // 🔥 ADDED
 
         private static readonly Dictionary<string, List<string>> AllowedTransitions =
-            new()
-            {
-                { "PENDING", new List<string> { "CONFIRMED", "CANCELLED", "FAILED" } },
-                { "CONFIRMED", new List<string> { "PREPARING", "CANCELLED" } },
-                { "PREPARING", new List<string> { "READY_FOR_PICKUP" } },
-                { "READY_FOR_PICKUP", new List<string> { "ASSIGNED" } },
-                { "ASSIGNED", new List<string> { "OUT_FOR_DELIVERY" } },
-                { "OUT_FOR_DELIVERY", new List<string> { "DELIVERED" } },
-                { "DELIVERED", new List<string> { "COMPLETED" } },
-                { "COMPLETED", new List<string>() },
-                { "CANCELLED", new List<string>() },
-                { "FAILED", new List<string>() }
-            };
+        new()
+        {
+            { OrderStatus.Pending, new List<string> { OrderStatus.Confirmed, OrderStatus.Cancelled, OrderStatus.Failed } },
+            { OrderStatus.Confirmed, new List<string> { OrderStatus.Preparing, OrderStatus.Cancelled } },
+            { OrderStatus.Preparing, new List<string> { OrderStatus.ReadyForPickup } },
+            { OrderStatus.ReadyForPickup, new List<string> { OrderStatus.Assigned } },
+            { OrderStatus.Assigned, new List<string> { OrderStatus.OutForDelivery } },
+            { OrderStatus.OutForDelivery, new List<string> { OrderStatus.Delivered } },
+            { OrderStatus.Delivered, new List<string> { OrderStatus.Completed } },
+            { OrderStatus.Completed, new List<string>() },
+            { OrderStatus.Cancelled, new List<string>() },
+            { OrderStatus.Failed, new List<string>() }
+        };
 
         public OrderService(
             IOrderRepository orderRepository,
             IProductRepository productRepository,
             DeliveryAssignmentService deliveryService,
-            ApplicationDbContext context)
+            ApplicationDbContext context,
+            AuditLogService auditLogService) // 🔥 UPDATED
         {
             _orderRepository = orderRepository;
             _productRepository = productRepository;
             _deliveryService = deliveryService;
             _context = context;
+            _auditLogService = auditLogService;
         }
 
         // =========================
-        // CREATE ORDER (Multi-Store Inventory Safe)
+        // CREATE ORDER
         // =========================
         public async Task<Order> CreateOrderAsync(OrderRequestDto request)
         {
@@ -59,12 +65,12 @@ namespace QuickCommerce.Infrastructure.Services
                 var order = new Order
                 {
                     CustomerId = request.CustomerId,
-                    StoreId = request.StoreId, // 🏬 Store Scope
+                    StoreId = request.StoreId,
                     DeliveryAddressId = request.DeliveryAddressId,
                     PaymentMode = request.PaymentMode,
                     DeliveryInstructions = request.DeliveryInstructions,
                     OrderNumber = $"ORD-{DateTime.UtcNow.Ticks}",
-                    Status = "PENDING",
+                    Status = OrderStatus.Pending,
                     PaymentStatus = "PENDING",
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
@@ -75,38 +81,30 @@ namespace QuickCommerce.Infrastructure.Services
 
                 foreach (var item in request.Items)
                 {
-                    var product = await _context.Products
-                        .FirstOrDefaultAsync(p => p.Id == item.ProductId);
-
+                    var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == item.ProductId);
                     if (product == null)
                         throw new Exception($"Product {item.ProductId} not found.");
 
-                    // 🔒 Fetch Store-Specific Inventory
-                    var inventory = await _context.StoreProductInventories
-                        .FirstOrDefaultAsync(i =>
-                            i.ProductId == item.ProductId &&
-                            i.StoreId == request.StoreId);
+                    var storeProduct = await _context.StoreProducts
+                        .FirstOrDefaultAsync(sp => sp.ProductId == item.ProductId && sp.StoreId == request.StoreId);
 
-                    if (inventory == null)
+                    if (storeProduct == null)
                         throw new Exception($"Product not available in this store.");
 
-                    if (inventory.Stock < item.Quantity)
+                    if (storeProduct.StockQuantity < item.Quantity)
                         throw new Exception($"Insufficient stock for {product.Name}");
 
-                    // ➖ Deduct store stock
-                    inventory.Stock -= item.Quantity;
-                    inventory.UpdatedAt = DateTime.UtcNow;
+                    storeProduct.StockQuantity -= item.Quantity;
+                    storeProduct.UpdatedAt = DateTime.UtcNow;
 
-                    // 📦 Inventory Log (Store Scoped)
-                    await _context.InventoryMovements.AddAsync(
-                        new InventoryMovement
-                        {
-                            ProductId = product.Id,
-                            StoreId = request.StoreId,
-                            QuantityChanged = -item.Quantity,
-                            Reason = "Order Created",
-                            CreatedAt = DateTime.UtcNow
-                        });
+                    await _context.InventoryMovements.AddAsync(new InventoryMovement
+                    {
+                        ProductId = product.Id,
+                        StoreId = request.StoreId,
+                        QuantityChanged = -item.Quantity,
+                        Reason = "Order Created",
+                        CreatedAt = DateTime.UtcNow
+                    });
 
                     var orderItem = new OrderItem
                     {
@@ -126,8 +124,43 @@ namespace QuickCommerce.Infrastructure.Services
                 order.SubtotalAmount = subtotal;
                 order.TotalAmount = subtotal;
 
+                var firstProduct = await _context.Products
+                    .FirstOrDefaultAsync(p => p.Id == request.Items.First().ProductId);
+
+                var rule = await _context.CategoryCommissionRules
+                    .FirstOrDefaultAsync(c => c.CategoryId == firstProduct.CategoryId && c.IsActive);
+
+                decimal percent = subtotal * (rule.CommissionPercent / 100);
+                decimal final = Math.Max(percent, rule.MinimumCommissionPerOrder);
+
+                order.PlatformCommission = final;
+                order.StorePayout = subtotal - final;
+                order.CommissionPercentApplied = rule.CommissionPercent;
+
                 await _context.Orders.AddAsync(order);
                 await _context.SaveChangesAsync();
+
+                await _context.OrderStatusHistories.AddAsync(new OrderStatusHistory
+                {
+                    OrderId = order.Id,
+                    OldStatus = "SYSTEM",
+                    NewStatus = OrderStatus.Pending,
+                    ChangedByUserId = request.CustomerId,
+                    Remarks = "Order created",
+                    ChangedAt = DateTime.UtcNow
+                });
+
+                await _context.SaveChangesAsync();
+
+                // 🔥 AUDIT LOG
+                await _auditLogService.LogAsync(
+                    request.CustomerId,
+                    "ORDERS",
+                    "CREATE",
+                    "Order",
+                    order.Id,
+                    $"Order created: {order.OrderNumber}"
+                );
 
                 await transaction.CommitAsync();
 
@@ -141,17 +174,9 @@ namespace QuickCommerce.Infrastructure.Services
         }
 
         // =========================
-        // GET ORDER
+        // UPDATE STATUS
         // =========================
-        public async Task<Order?> GetOrderByIdAsync(int id)
-        {
-            return await _orderRepository.GetByIdAsync(id);
-        }
-
-        // =========================
-        // UPDATE ORDER STATUS
-        // =========================
-        public async Task<bool> UpdateOrderStatusAsync(int orderId, string newStatus)
+        public async Task<bool> UpdateOrderStatusAsync(int orderId, string newStatus, int? changedByUserId, string? remarks)
         {
             var order = await _context.Orders
                 .Include(o => o.OrderItems)
@@ -162,61 +187,122 @@ namespace QuickCommerce.Infrastructure.Services
 
             newStatus = newStatus.ToUpper();
 
-            if (!IsValidTransition(order.Status, newStatus))
-                throw new Exception($"Invalid status transition from {order.Status} to {newStatus}");
+            if (!AllowedTransitions.ContainsKey(order.Status) ||
+                !AllowedTransitions[order.Status].Contains(newStatus))
+                throw new Exception($"Invalid transition {order.Status} → {newStatus}");
 
-            // Payment validation
-            if (newStatus == "CONFIRMED")
-            {
-                if (order.PaymentMode != "COD" && order.PaymentStatus != "PAID")
-                    throw new Exception("Payment not completed.");
-            }
+            var oldStatus = order.Status;
 
-            // 🔄 Restore Store Inventory if Cancelled
-            if (newStatus == "CANCELLED")
+            if (newStatus == OrderStatus.Cancelled)
             {
                 foreach (var item in order.OrderItems)
                 {
-                    var inventory = await _context.StoreProductInventories
-                        .FirstOrDefaultAsync(i =>
-                            i.ProductId == item.ProductId &&
-                            i.StoreId == order.StoreId);
+                    var sp = await _context.StoreProducts
+                        .FirstOrDefaultAsync(x => x.ProductId == item.ProductId && x.StoreId == order.StoreId);
 
-                    if (inventory != null)
+                    if (sp != null)
                     {
-                        inventory.Stock += item.Quantity;
-                        inventory.UpdatedAt = DateTime.UtcNow;
+                        sp.StockQuantity += item.Quantity;
 
-                        await _context.InventoryMovements.AddAsync(
-                            new InventoryMovement
-                            {
-                                ProductId = item.ProductId,
-                                StoreId = order.StoreId,
-                                QuantityChanged = item.Quantity,
-                                Reason = "Order Cancelled",
-                                CreatedAt = DateTime.UtcNow
-                            });
+                        await _context.InventoryMovements.AddAsync(new InventoryMovement
+                        {
+                            ProductId = item.ProductId,
+                            StoreId = order.StoreId,
+                            QuantityChanged = item.Quantity,
+                            Reason = "Order Cancelled",
+                            CreatedAt = DateTime.UtcNow
+                        });
                     }
                 }
             }
 
             order.Status = newStatus;
             order.UpdatedAt = DateTime.UtcNow;
-            
+
+            await _context.OrderStatusHistories.AddAsync(new OrderStatusHistory
+            {
+                OrderId = order.Id,
+                OldStatus = oldStatus,
+                NewStatus = newStatus,
+                ChangedByUserId = changedByUserId,
+                Remarks = remarks,
+                ChangedAt = DateTime.UtcNow
+            });
+
             await _context.SaveChangesAsync();
 
-            if (newStatus == "CONFIRMED")
+            // 🔥 AUDIT LOG
+            await _auditLogService.LogAsync(
+                changedByUserId,
+                "ORDERS",
+                "STATUS_UPDATE",
+                "Order",
+                order.Id,
+                $"Order status changed: {oldStatus} → {newStatus}"
+            );
+
+            if (newStatus == OrderStatus.Confirmed)
                 await _deliveryService.AssignDeliveryAsync(order.Id);
 
             return true;
         }
-
-        private bool IsValidTransition(string currentStatus, string newStatus)
+        // =========================
+        // GET ORDER BY ID
+        // =========================
+        public async Task<Order?> GetOrderByIdAsync(int orderId)
         {
-            if (!AllowedTransitions.ContainsKey(currentStatus))
-                return false;
+            return await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+        }
 
-            return AllowedTransitions[currentStatus].Contains(newStatus);
+        // =========================
+        // GET ALL ORDERS
+        // =========================
+        public async Task<IEnumerable<Order>> GetAllOrdersAsync()
+        {
+            return await _context.Orders
+                .OrderByDescending(o => o.CreatedAt)
+                .ToListAsync();
+        }
+
+        // =========================
+        // GET ORDERS BY STORE
+        // =========================
+        public async Task<IEnumerable<Order>> GetOrdersByStoreAsync(int storeId)
+        {
+            return await _context.Orders
+                .Where(o => o.StoreId == storeId)
+                .OrderByDescending(o => o.CreatedAt)
+                .ToListAsync();
+        }
+
+        // =========================
+        // GET ORDERS BY CUSTOMER
+        // =========================
+        public async Task<IEnumerable<Order>> GetOrdersByCustomerAsync(int customerId)
+        {
+            return await _context.Orders
+                .Where(o => o.CustomerId == customerId)
+                .OrderByDescending(o => o.CreatedAt)
+                .ToListAsync();
+        }
+
+        // =========================
+        // GET ORDER TRACKING
+        // =========================
+        public async Task<IEnumerable<CustomerOrderTrackingDto>> GetOrderTrackingAsync(int orderId)
+        {
+            return await _context.OrderStatusHistories
+                .Where(h => h.OrderId == orderId)
+                .OrderBy(h => h.ChangedAt)
+                .Select(h => new CustomerOrderTrackingDto
+                {
+                    Status = h.NewStatus,
+                    Remarks = h.Remarks,
+                    ChangedAt = h.ChangedAt
+                })
+                .ToListAsync();
         }
     }
 }

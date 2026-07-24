@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using QuickCommerce.Core.Enums;
 
 namespace QuickCommerce.Core.Entities
 {
@@ -14,8 +15,17 @@ namespace QuickCommerce.Core.Entities
         [Column("orderid")]
         public int OrderId { get; set; }
 
-        [Column("deliverypartnerid")]
-        public int DeliveryPartnerId { get; set; }
+        // ✅ NEW (Internal Agent - Store User)
+        [Column("assignedtouserid")]
+        public int? AssignedToUserId { get; set; }
+
+        // ✅ NEW (External Agent - Delivery Partner)
+        [Column("assignedtopartnerid")]
+        public int? AssignedToPartnerId { get; set; }
+
+        // ✅ NEW (Agent Type)
+        [Column("agenttype")]
+        public DeliveryAgentType AgentType { get; set; }
 
         [Column("status")]
         public string Status { get; set; }
@@ -62,8 +72,14 @@ namespace QuickCommerce.Core.Entities
         [Column("iscodsettled")]
         public bool? IsCodSettled { get; set; }
 
-        // Navigation Properties (NO ForeignKey attributes)
+        // =========================
+        // NAVIGATION
+        // =========================
+
         public virtual Order Order { get; set; }
-        public virtual DeliveryPartner DeliveryPartner { get; set; }
+
+        public virtual User? InternalAgent { get; set; }
+
+        public virtual DeliveryPartner? ExternalAgent { get; set; }
     }
 }

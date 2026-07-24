@@ -1,5 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
+using QuickCommerce.Core.Entities;
+
 
 namespace QuickCommerce.Core.Entities
 {

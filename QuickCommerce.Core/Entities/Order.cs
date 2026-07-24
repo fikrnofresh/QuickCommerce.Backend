@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using QuickCommerce.Core.Enums;
 
 namespace QuickCommerce.Core.Entities
 {
@@ -48,7 +49,7 @@ namespace QuickCommerce.Core.Entities
 
         [Required]
         [Column("status")]
-        public string Status { get; set; } = "PENDING";
+        public string Status { get; set; } = OrderStatus.Placed;
 
         // =========================
         // PRICING
@@ -105,5 +106,14 @@ namespace QuickCommerce.Core.Entities
         // =========================
 
         public ICollection<OrderItem>? OrderItems { get; set; }
+        // =========================
+        // PLATFORM FINANCIALS
+        // =========================
+
+        public decimal PlatformCommission { get; set; }
+
+        public decimal StorePayout { get; set; }
+
+        public decimal CommissionPercentApplied { get; set; }
     }
 }

@@ -34,7 +34,17 @@ namespace QuickCommerce.Core.Entities
         public DateTime? RevokedAt { get; set; }
 
         [Column("replacedbytoken")]
+        [MaxLength(500)]
         public string? ReplacedByToken { get; set; }
+
+        // ✅ NEW (IMPORTANT)
+        [Column("deviceinfo")]
+        [MaxLength(200)]
+        public string? DeviceInfo { get; set; }
+
+        [Column("ipaddress")]
+        [MaxLength(50)]
+        public string? IpAddress { get; set; }
 
         // Navigation
         [ForeignKey("UserId")]

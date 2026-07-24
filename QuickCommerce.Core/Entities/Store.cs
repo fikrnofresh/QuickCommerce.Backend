@@ -1,4 +1,5 @@
-﻿using System;
+﻿using QuickCommerce.Core.Enums;
+using System;
 using System.Collections.Generic;
 
 namespace QuickCommerce.Core.Entities
@@ -7,15 +8,9 @@ namespace QuickCommerce.Core.Entities
     {
         public int Id { get; set; }
 
-        // Relationship
-        public int FranchiseId { get; set; }
-        public Franchise Franchise { get; set; } = null!;
-
-        // Basic Info
         public string Name { get; set; } = null!;
-        public string Code { get; set; } = null!; // Unique short code
+        public string Code { get; set; } = null!;
 
-        // Location
         public string City { get; set; } = null!;
         public string Area { get; set; } = null!;
         public string State { get; set; } = null!;
@@ -24,26 +19,51 @@ namespace QuickCommerce.Core.Entities
         public decimal? Latitude { get; set; }
         public decimal? Longitude { get; set; }
 
-        // Contact
         public string? PhoneNumber { get; set; }
         public string? Email { get; set; }
+        // =========================
+        // BUSINESS INFORMATION
+        // =========================
 
-        // Operational Timing
+        public string? BusinessName { get; set; }
+
+        public string? GstNumber { get; set; }
+
+        public string? PanNumber { get; set; }
+
+        public string? LicenseNumber { get; set; }
+
         public TimeSpan? OpeningTime { get; set; }
         public TimeSpan? ClosingTime { get; set; }
 
-        // Status
-        public bool IsActive { get; set; } = true;
-        public bool IsOnline { get; set; } = true;
+        // =========================
+        // ENTERPRISE STATUS CONTROL
+        // =========================
+
+        public StoreStatus Status { get; set; } = StoreStatus.Active;
+
         public bool IsVerified { get; set; } = false;
 
+        // =========================
+        // Legacy flags (temporary)
+        // =========================
+
+        public bool IsActive { get; set; } = true;
+        public bool IsOnline { get; set; } = true;
+
+        // =========================
         // Audit
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        // =========================
+
+        public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 
-        // Navigation (we will connect later)
+        // =========================
+        // Navigation
+        // =========================
+
+        public ICollection<StoreProduct>? StoreProducts { get; set; }
+        public ICollection<UserStore>? UserStores { get; set; }
         public ICollection<Order>? Orders { get; set; }
-        public ICollection<Product>? Products { get; set; }
-        public ICollection<UserStore> UserStores { get; set; }
     }
 }

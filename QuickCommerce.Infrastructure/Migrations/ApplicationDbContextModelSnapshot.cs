@@ -41,30 +41,58 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasColumnName("created_at");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("description");
 
-                    b.Property<string>("EntityName")
+                    b.Property<string>("Device")
+                        .HasColumnType("text")
+                        .HasColumnName("device");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("integer")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("EntityType")
+                        .HasColumnType("text")
+                        .HasColumnName("entity_type");
+
+                    b.Property<string>("IpAddress")
+                        .HasColumnType("text")
+                        .HasColumnName("ip_address");
+
+                    b.Property<string>("Metadata")
+                        .HasColumnType("text")
+                        .HasColumnName("metadata");
+
+                    b.Property<string>("Module")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("entity_name");
+                        .HasColumnName("module");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("updated_at");
+                    b.Property<string>("NewData")
+                        .HasColumnType("text")
+                        .HasColumnName("new_data");
+
+                    b.Property<string>("OldData")
+                        .HasColumnType("text")
+                        .HasColumnName("old_data");
+
+                    b.Property<string>("Source")
+                        .HasColumnType("text")
+                        .HasColumnName("source");
 
                     b.Property<int?>("UserId")
                         .HasColumnType("integer")
                         .HasColumnName("user_id");
 
+                    b.Property<string>("UserRole")
+                        .HasColumnType("text")
+                        .HasColumnName("user_role");
+
                     b.HasKey("Id")
-                        .HasName("pk_activity_log");
+                        .HasName("pk_activity_logs");
 
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_activity_log_user_id");
-
-                    b.ToTable("activity_log", (string)null);
+                    b.ToTable("activity_logs", (string)null);
                 });
 
             modelBuilder.Entity("QuickCommerce.Core.Entities.Address", b =>
@@ -149,6 +177,152 @@ namespace QuickCommerce.Infrastructure.Migrations
                     b.ToTable("addresses", (string)null);
                 });
 
+            modelBuilder.Entity("QuickCommerce.Core.Entities.AdminSession", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Browser")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("browser");
+
+                    b.Property<string>("DeviceInfo")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("deviceinfo");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("ipaddress");
+
+                    b.Property<bool>("IsCurrent")
+                        .HasColumnType("boolean")
+                        .HasColumnName("iscurrent");
+
+                    b.Property<bool>("IsRevoked")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isrevoked");
+
+                    b.Property<DateTime>("LastActivity")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("lastactivity");
+
+                    b.Property<DateTime>("LoginTime")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("logintime");
+
+                    b.Property<DateTime?>("LogoutTime")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("logouttime");
+
+                    b.Property<string>("OperatingSystem")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("operatingsystem");
+
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("refreshtoken");
+
+                    b.Property<string>("RevokeReason")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("revokereason");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("userid");
+
+                    b.HasKey("Id")
+                        .HasName("pk_adminsessions");
+
+                    b.HasIndex("RefreshToken")
+                        .IsUnique()
+                        .HasDatabaseName("ix_adminsessions_refreshtoken");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_adminsessions_userid");
+
+                    b.ToTable("adminsessions", (string)null);
+                });
+
+            modelBuilder.Entity("QuickCommerce.Core.Entities.Cart", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("StoreId")
+                        .HasColumnType("integer")
+                        .HasColumnName("store_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_cart");
+
+                    b.ToTable("cart", (string)null);
+                });
+
+            modelBuilder.Entity("QuickCommerce.Core.Entities.CartItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CartId")
+                        .HasColumnType("integer")
+                        .HasColumnName("cart_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<decimal>("PriceSnapshot")
+                        .HasColumnType("numeric")
+                        .HasColumnName("price_snapshot");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer")
+                        .HasColumnName("product_id");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
+
+                    b.HasKey("Id")
+                        .HasName("pk_cart_item");
+
+                    b.HasIndex("CartId")
+                        .HasDatabaseName("ix_cart_item_cart_id");
+
+                    b.ToTable("cart_item", (string)null);
+                });
+
             modelBuilder.Entity("QuickCommerce.Core.Entities.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -186,6 +360,173 @@ namespace QuickCommerce.Infrastructure.Migrations
                     b.ToTable("categories", (string)null);
                 });
 
+            modelBuilder.Entity("QuickCommerce.Core.Entities.CategoryCommissionRule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("integer")
+                        .HasColumnName("category_id");
+
+                    b.Property<decimal>("CommissionPercent")
+                        .HasColumnType("numeric")
+                        .HasColumnName("commission_percent");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<decimal>("MinimumCommissionPerOrder")
+                        .HasColumnType("numeric")
+                        .HasColumnName("minimum_commission_per_order");
+
+                    b.HasKey("Id")
+                        .HasName("pk_category_commission_rule");
+
+                    b.ToTable("category_commission_rule", (string)null);
+                });
+
+            modelBuilder.Entity("QuickCommerce.Core.Entities.CustomerActivity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("action");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("integer")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("Metadata")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("metadata");
+
+                    b.Property<decimal?>("Score")
+                        .HasColumnType("numeric")
+                        .HasColumnName("score");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_customer_activity");
+
+                    b.ToTable("customer_activity", (string)null);
+                });
+
+            modelBuilder.Entity("QuickCommerce.Core.Entities.CustomerAddress", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AddressLine1")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("address_line1");
+
+                    b.Property<string>("AddressLine2")
+                        .HasColumnType("text")
+                        .HasColumnName("address_line2");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("city");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_default");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("label");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("latitude");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("longitude");
+
+                    b.Property<string>("Pincode")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("pincode");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("state");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_customer_address");
+
+                    b.ToTable("customer_address", (string)null);
+                });
+
+            modelBuilder.Entity("QuickCommerce.Core.Entities.CustomerSegment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Segment")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("segment");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_customer_segment");
+
+                    b.ToTable("customer_segment", (string)null);
+                });
+
             modelBuilder.Entity("QuickCommerce.Core.Entities.Delivery", b =>
                 {
                     b.Property<int>("Id")
@@ -199,9 +540,21 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("acceptedat");
 
+                    b.Property<int>("AgentType")
+                        .HasColumnType("integer")
+                        .HasColumnName("agenttype");
+
                     b.Property<DateTime?>("AssignedAt")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("assignedat");
+
+                    b.Property<int?>("AssignedToPartnerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("assignedtopartnerid");
+
+                    b.Property<int?>("AssignedToUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("assignedtouserid");
 
                     b.Property<decimal?>("CodCollectedAmount")
                         .HasColumnType("numeric")
@@ -222,10 +575,6 @@ namespace QuickCommerce.Infrastructure.Migrations
                     b.Property<decimal?>("DeliveryFee")
                         .HasColumnType("numeric")
                         .HasColumnName("deliveryfee");
-
-                    b.Property<int>("DeliveryPartnerId")
-                        .HasColumnType("integer")
-                        .HasColumnName("deliverypartnerid");
 
                     b.Property<decimal?>("DistanceInKm")
                         .HasColumnType("numeric")
@@ -267,8 +616,11 @@ namespace QuickCommerce.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_deliveries");
 
-                    b.HasIndex("DeliveryPartnerId")
-                        .HasDatabaseName("ix_deliveries_deliverypartnerid");
+                    b.HasIndex("AssignedToPartnerId")
+                        .HasDatabaseName("ix_deliveries_assignedtopartnerid");
+
+                    b.HasIndex("AssignedToUserId")
+                        .HasDatabaseName("ix_deliveries_assignedtouserid");
 
                     b.HasIndex("OrderId")
                         .HasDatabaseName("ix_deliveries_orderid");
@@ -384,6 +736,10 @@ namespace QuickCommerce.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AssignedToPartnerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("AssignedToPartnerId");
+
                     b.Property<string>("BeatName")
                         .IsRequired()
                         .HasColumnType("text")
@@ -393,92 +749,13 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("createdat");
 
-                    b.Property<int>("DeliveryPartnerId")
-                        .HasColumnType("integer")
-                        .HasColumnName("deliverypartnerid");
-
                     b.HasKey("Id")
                         .HasName("pk_deliverypartnerbeats");
 
-                    b.HasIndex("DeliveryPartnerId")
-                        .HasDatabaseName("ix_deliverypartnerbeats_deliverypartnerid");
+                    b.HasIndex("AssignedToPartnerId")
+                        .HasDatabaseName("ix_deliverypartnerbeats_assigned_to_partner_id");
 
                     b.ToTable("deliverypartnerbeats", (string)null);
-                });
-
-            modelBuilder.Entity("QuickCommerce.Core.Entities.Franchise", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("AgreementEndDate")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("agreement_end_date");
-
-                    b.Property<DateTime?>("AgreementStartDate")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("agreement_start_date");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("code");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("GSTNumber")
-                        .HasColumnType("text")
-                        .HasColumnName("gst_number");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_active");
-
-                    b.Property<bool>("IsVerified")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_verified");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("name");
-
-                    b.Property<string>("OwnerEmail")
-                        .HasColumnType("text")
-                        .HasColumnName("owner_email");
-
-                    b.Property<string>("OwnerName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("owner_name");
-
-                    b.Property<string>("OwnerPhone")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("owner_phone");
-
-                    b.Property<string>("PANNumber")
-                        .HasColumnType("text")
-                        .HasColumnName("pan_number");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id")
-                        .HasName("pk_franchise");
-
-                    b.HasIndex("Code")
-                        .IsUnique()
-                        .HasDatabaseName("ix_franchise_code");
-
-                    b.ToTable("franchise", (string)null);
                 });
 
             modelBuilder.Entity("QuickCommerce.Core.Entities.InventoryMovement", b =>
@@ -494,6 +771,16 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("MovementType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("movement_type");
+
+                    b.Property<int?>("PerformedByUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("performed_by_user_id");
+
                     b.Property<int>("ProductId")
                         .HasColumnType("integer")
                         .HasColumnName("product_id");
@@ -503,13 +790,17 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasColumnName("quantity_changed");
 
                     b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasColumnType("text")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("reason");
 
                     b.Property<int>("StoreId")
                         .HasColumnType("integer")
-                        .HasColumnName("storeid");
+                        .HasColumnName("store_id");
+
+                    b.Property<int>("StoreProductId")
+                        .HasColumnType("integer")
+                        .HasColumnName("store_product_id");
 
                     b.HasKey("Id")
                         .HasName("pk_inventory_movements");
@@ -518,9 +809,249 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasDatabaseName("ix_inventory_movements_product_id");
 
                     b.HasIndex("StoreId")
-                        .HasDatabaseName("ix_inventory_movements_storeid");
+                        .HasDatabaseName("ix_inventory_movements_store_id");
+
+                    b.HasIndex("StoreProductId")
+                        .HasDatabaseName("ix_inventory_movements_store_product_id");
 
                     b.ToTable("inventory_movements", (string)null);
+                });
+
+            modelBuilder.Entity("QuickCommerce.Core.Entities.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("createdat");
+
+                    b.Property<int?>("EntityId")
+                        .HasColumnType("integer")
+                        .HasColumnName("entityid");
+
+                    b.Property<string>("EntityName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("entityname");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_read");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("message");
+
+                    b.Property<string>("Module")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("module");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("title");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_notifications");
+
+                    b.ToTable("notifications", (string)null);
+                });
+
+            modelBuilder.Entity("QuickCommerce.Core.Entities.NotificationRecipient", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AssignedToPartnerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("AssignedToPartnerId");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isread");
+
+                    b.Property<int>("NotificationId")
+                        .HasColumnType("integer")
+                        .HasColumnName("notificationid");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("readat");
+
+                    b.Property<int?>("StoreId")
+                        .HasColumnType("integer")
+                        .HasColumnName("storeid");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("userid");
+
+                    b.HasKey("Id")
+                        .HasName("pk_notification_recipients");
+
+                    b.HasIndex("NotificationId")
+                        .HasDatabaseName("ix_notification_recipients_notificationid");
+
+                    b.ToTable("notification_recipients", (string)null);
+                });
+
+            modelBuilder.Entity("QuickCommerce.Core.Entities.OnboardingRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AadharNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("aadhar_number");
+
+                    b.Property<string>("AddressLine1")
+                        .HasColumnType("text")
+                        .HasColumnName("address_line1");
+
+                    b.Property<string>("AddressLine2")
+                        .HasColumnType("text")
+                        .HasColumnName("address_line2");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("approved_at");
+
+                    b.Property<int?>("ApprovedBy")
+                        .HasColumnType("integer")
+                        .HasColumnName("approved_by");
+
+                    b.Property<string>("City")
+                        .HasColumnType("text")
+                        .HasColumnName("city");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("DateOfBirth")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("date_of_birth");
+
+                    b.Property<string>("DocumentUrls")
+                        .HasColumnType("text")
+                        .HasColumnName("document_urls");
+
+                    b.Property<string>("DrivingLicenseNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("driving_license_number");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text")
+                        .HasColumnName("email");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("full_name");
+
+                    b.Property<string>("Gender")
+                        .HasColumnType("text")
+                        .HasColumnName("gender");
+
+                    b.Property<bool>("IsKycVerified")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_kyc_verified");
+
+                    b.Property<decimal?>("Latitude")
+                        .HasColumnType("numeric")
+                        .HasColumnName("latitude");
+
+                    b.Property<decimal?>("Longitude")
+                        .HasColumnType("numeric")
+                        .HasColumnName("longitude");
+
+                    b.Property<string>("Metadata")
+                        .HasColumnType("text")
+                        .HasColumnName("metadata");
+
+                    b.Property<string>("PanNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("pan_number");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("phone_number");
+
+                    b.Property<string>("Pincode")
+                        .HasColumnType("text")
+                        .HasColumnName("pincode");
+
+                    b.Property<string>("ProfileImageUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("profile_image_url");
+
+                    b.Property<string>("RejectionReason")
+                        .HasColumnType("text")
+                        .HasColumnName("rejection_reason");
+
+                    b.Property<string>("RequestedPermissions")
+                        .HasColumnType("text")
+                        .HasColumnName("requested_permissions");
+
+                    b.Property<string>("RequestedRole")
+                        .HasColumnType("text")
+                        .HasColumnName("requested_role");
+
+                    b.Property<string>("State")
+                        .HasColumnType("text")
+                        .HasColumnName("state");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<int?>("StoreId")
+                        .HasColumnType("integer")
+                        .HasColumnName("store_id");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("VehicleNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("vehicle_number");
+
+                    b.Property<string>("VehicleType")
+                        .HasColumnType("text")
+                        .HasColumnName("vehicle_type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_onboarding_requests");
+
+                    b.ToTable("onboarding_requests", (string)null);
                 });
 
             modelBuilder.Entity("QuickCommerce.Core.Entities.Order", b =>
@@ -531,6 +1062,10 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasColumnName("id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("CommissionPercentApplied")
+                        .HasColumnType("numeric")
+                        .HasColumnName("commission_percent_applied");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone")
@@ -571,6 +1106,10 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("paymentstatus");
 
+                    b.Property<decimal>("PlatformCommission")
+                        .HasColumnType("numeric")
+                        .HasColumnName("platform_commission");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text")
@@ -579,6 +1118,10 @@ namespace QuickCommerce.Infrastructure.Migrations
                     b.Property<int>("StoreId")
                         .HasColumnType("integer")
                         .HasColumnName("storeid");
+
+                    b.Property<decimal>("StorePayout")
+                        .HasColumnType("numeric")
+                        .HasColumnName("store_payout");
 
                     b.Property<decimal>("SubtotalAmount")
                         .HasColumnType("decimal(10,2)")
@@ -669,6 +1212,49 @@ namespace QuickCommerce.Infrastructure.Migrations
                     b.ToTable("orderitems", (string)null);
                 });
 
+            modelBuilder.Entity("QuickCommerce.Core.Entities.OrderStatusHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("changed_at");
+
+                    b.Property<int?>("ChangedByUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("changed_by_user_id");
+
+                    b.Property<string>("NewStatus")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("new_status");
+
+                    b.Property<string>("OldStatus")
+                        .HasColumnType("text")
+                        .HasColumnName("old_status");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("integer")
+                        .HasColumnName("orderid");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("text")
+                        .HasColumnName("remarks");
+
+                    b.HasKey("Id")
+                        .HasName("pk_orderstatushistory");
+
+                    b.HasIndex("OrderId")
+                        .HasDatabaseName("ix_orderstatushistory_orderid");
+
+                    b.ToTable("orderstatushistory", (string)null);
+                });
+
             modelBuilder.Entity("QuickCommerce.Core.Entities.OtpVerification", b =>
                 {
                     b.Property<int>("Id")
@@ -709,6 +1295,75 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasName("pk_otp_verifications");
 
                     b.ToTable("otp_verifications", (string)null);
+                });
+
+            modelBuilder.Entity("QuickCommerce.Core.Entities.PasswordResetToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("createdat");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("createdby");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("expiresat");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("ipaddress");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isused");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("purpose");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("token");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("usedat");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("useragent");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("userid");
+
+                    b.HasKey("Id")
+                        .HasName("pk_passwordresettokens");
+
+                    b.HasIndex("Token")
+                        .IsUnique()
+                        .HasDatabaseName("ix_passwordresettokens_token");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_passwordresettokens_userid");
+
+                    b.ToTable("passwordresettokens", (string)null);
                 });
 
             modelBuilder.Entity("QuickCommerce.Core.Entities.Permission", b =>
@@ -796,10 +1451,6 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("searchkeywords");
 
-                    b.Property<int?>("StoreId")
-                        .HasColumnType("integer")
-                        .HasColumnName("store_id");
-
                     b.Property<string>("Unit")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -811,9 +1462,6 @@ namespace QuickCommerce.Infrastructure.Migrations
 
                     b.HasIndex("CategoryId")
                         .HasDatabaseName("ix_products_categoryid");
-
-                    b.HasIndex("StoreId")
-                        .HasDatabaseName("ix_products_store_id");
 
                     b.ToTable("products", (string)null);
                 });
@@ -831,16 +1479,27 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("createdat");
 
+                    b.Property<string>("DeviceInfo")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("deviceinfo");
+
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("expiresat");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("ipaddress");
 
                     b.Property<bool>("IsRevoked")
                         .HasColumnType("boolean")
                         .HasColumnName("isrevoked");
 
                     b.Property<string>("ReplacedByToken")
-                        .HasColumnType("text")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("replacedbytoken");
 
                     b.Property<DateTime?>("RevokedAt")
@@ -859,6 +1518,10 @@ namespace QuickCommerce.Infrastructure.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_refreshtokens");
+
+                    b.HasIndex("Token")
+                        .IsUnique()
+                        .HasDatabaseName("ix_refreshtokens_token");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_refreshtokens_userid");
@@ -879,6 +1542,10 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("integer")
+                        .HasColumnName("created_by");
+
                     b.Property<string>("Description")
                         .HasColumnType("text")
                         .HasColumnName("description");
@@ -886,6 +1553,10 @@ namespace QuickCommerce.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<bool>("IsSystemRole")
                         .HasColumnType("boolean")
@@ -896,9 +1567,22 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("name");
 
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("scope");
+
+                    b.Property<int?>("StoreId")
+                        .HasColumnType("integer")
+                        .HasColumnName("store_id");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("updated_at");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("integer")
+                        .HasColumnName("updated_by");
 
                     b.HasKey("Id")
                         .HasName("pk_role");
@@ -943,6 +1627,10 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("area");
 
+                    b.Property<string>("BusinessName")
+                        .HasColumnType("text")
+                        .HasColumnName("business_name");
+
                     b.Property<string>("City")
                         .IsRequired()
                         .HasColumnType("text")
@@ -965,9 +1653,9 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("email");
 
-                    b.Property<int>("FranchiseId")
-                        .HasColumnType("integer")
-                        .HasColumnName("franchise_id");
+                    b.Property<string>("GstNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("gst_number");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
@@ -985,6 +1673,10 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("latitude");
 
+                    b.Property<string>("LicenseNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("license_number");
+
                     b.Property<decimal?>("Longitude")
                         .HasColumnType("numeric")
                         .HasColumnName("longitude");
@@ -997,6 +1689,10 @@ namespace QuickCommerce.Infrastructure.Migrations
                     b.Property<TimeSpan?>("OpeningTime")
                         .HasColumnType("interval")
                         .HasColumnName("opening_time");
+
+                    b.Property<string>("PanNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("pan_number");
 
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("text")
@@ -1012,6 +1708,10 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("state");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("updated_at");
@@ -1023,13 +1723,10 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_store_code");
 
-                    b.HasIndex("FranchiseId")
-                        .HasDatabaseName("ix_store_franchise_id");
-
                     b.ToTable("store", (string)null);
                 });
 
-            modelBuilder.Entity("QuickCommerce.Core.Entities.StoreProductInventory", b =>
+            modelBuilder.Entity("QuickCommerce.Core.Entities.StoreProduct", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -1042,37 +1739,135 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("createdat");
 
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isavailable");
+
                     b.Property<int>("LowStockThreshold")
                         .HasColumnType("integer")
                         .HasColumnName("lowstockthreshold");
+
+                    b.Property<decimal?>("MRP")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("mrp");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("price");
 
                     b.Property<int>("ProductId")
                         .HasColumnType("integer")
                         .HasColumnName("productid");
 
-                    b.Property<int>("Stock")
+                    b.Property<int>("StockQuantity")
                         .HasColumnType("integer")
-                        .HasColumnName("stock");
+                        .HasColumnName("stockquantity");
 
                     b.Property<int>("StoreId")
                         .HasColumnType("integer")
                         .HasColumnName("storeid");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("updatedat");
 
                     b.HasKey("Id")
-                        .HasName("pk_store_product_inventory");
+                        .HasName("pk_storeproducts");
 
                     b.HasIndex("ProductId")
-                        .HasDatabaseName("ix_store_product_inventory_productid");
+                        .HasDatabaseName("ix_storeproducts_productid");
 
                     b.HasIndex("StoreId", "ProductId")
                         .IsUnique()
-                        .HasDatabaseName("ix_store_product_inventory_storeid_productid");
+                        .HasDatabaseName("ix_storeproducts_storeid_productid");
 
-                    b.ToTable("store_product_inventory", (string)null);
+                    b.ToTable("storeproducts", (string)null);
+                });
+
+            modelBuilder.Entity("QuickCommerce.Core.Entities.StoreSettlement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("createdat");
+
+                    b.Property<decimal>("PlatformCommission")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("platformcommission");
+
+                    b.Property<DateTime>("SettlementDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("settlementdate");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<int>("StoreId")
+                        .HasColumnType("integer")
+                        .HasColumnName("storeid");
+
+                    b.Property<decimal>("StorePayout")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("storepayout");
+
+                    b.Property<int>("TotalOrders")
+                        .HasColumnType("integer")
+                        .HasColumnName("totalorders");
+
+                    b.Property<decimal>("TotalRevenue")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("totalrevenue");
+
+                    b.HasKey("Id")
+                        .HasName("pk_store_settlements");
+
+                    b.ToTable("store_settlements", (string)null);
+                });
+
+            modelBuilder.Entity("QuickCommerce.Core.Entities.SupportTicket", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("message");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("subject");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_support_tickets");
+
+                    b.ToTable("support_tickets", (string)null);
                 });
 
             modelBuilder.Entity("QuickCommerce.Core.Entities.User", b =>
@@ -1088,26 +1883,125 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("integer")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTime?>("DateOfBirth")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("date_of_birth");
+
+                    b.Property<string>("Department")
+                        .HasColumnType("text")
+                        .HasColumnName("department");
+
+                    b.Property<string>("Designation")
+                        .HasColumnType("text")
+                        .HasColumnName("designation");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text")
+                        .HasColumnName("email");
+
+                    b.Property<string>("EmployeeCode")
+                        .HasColumnType("text")
+                        .HasColumnName("employee_code");
+
                     b.Property<int>("FailedLoginAttempts")
                         .HasColumnType("integer")
                         .HasColumnName("failed_login_attempts");
+
+                    b.Property<string>("FirstName")
+                        .HasColumnType("text")
+                        .HasColumnName("first_name");
+
+                    b.Property<string>("FullName")
+                        .HasColumnType("text")
+                        .HasColumnName("full_name");
+
+                    b.Property<string>("Gender")
+                        .HasColumnType("text")
+                        .HasColumnName("gender");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsAdmin")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_admin");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<bool>("IsEmailVerified")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_email_verified");
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_locked");
 
                     b.Property<bool>("IsPhoneVerified")
                         .HasColumnType("boolean")
                         .HasColumnName("is_phone_verified");
 
+                    b.Property<DateTime?>("JoiningDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("joining_date");
+
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("last_login_at");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("text")
+                        .HasColumnName("last_name");
+
                     b.Property<DateTime?>("LockoutEnd")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("lockout_end");
 
+                    b.Property<DateTime?>("PasswordChangedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("password_changed_at");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("text")
+                        .HasColumnName("password_hash");
+
                     b.Property<string>("PhoneNumber")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("phone_number");
+
+                    b.Property<string>("PreferredLanguage")
+                        .HasColumnType("text")
+                        .HasColumnName("preferred_language");
+
+                    b.Property<string>("ProfileImageUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("profile_image_url");
+
+                    b.Property<string>("TimeZone")
+                        .HasColumnType("text")
+                        .HasColumnName("time_zone");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("two_factor_enabled");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("updated_at");
+
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("integer")
+                        .HasColumnName("updated_by");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("text")
+                        .HasColumnName("username");
 
                     b.HasKey("Id")
                         .HasName("pk_users");
@@ -1165,24 +2059,110 @@ namespace QuickCommerce.Infrastructure.Migrations
                     b.ToTable("user_stores", (string)null);
                 });
 
-            modelBuilder.Entity("QuickCommerce.Core.Entities.ActivityLog", b =>
+            modelBuilder.Entity("QuickCommerce.Core.Entities.Wallet", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("numeric")
+                        .HasColumnName("balance");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_wallet");
+
+                    b.ToTable("wallet", (string)null);
+                });
+
+            modelBuilder.Entity("QuickCommerce.Core.Entities.WalletTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("amount");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Reference")
+                        .HasColumnType("text")
+                        .HasColumnName("reference");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_wallet_transaction");
+
+                    b.ToTable("wallet_transaction", (string)null);
+                });
+
+            modelBuilder.Entity("QuickCommerce.Core.Entities.AdminSession", b =>
                 {
                     b.HasOne("QuickCommerce.Core.Entities.User", "User")
-                        .WithMany("ActivityLogs")
+                        .WithMany()
                         .HasForeignKey("UserId")
-                        .HasConstraintName("fk_activity_log_users_user_id");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_adminsessions_user_userid");
 
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("QuickCommerce.Core.Entities.CartItem", b =>
+                {
+                    b.HasOne("QuickCommerce.Core.Entities.Cart", "Cart")
+                        .WithMany("Items")
+                        .HasForeignKey("CartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_cart_item_cart_cart_id");
+
+                    b.Navigation("Cart");
+                });
+
             modelBuilder.Entity("QuickCommerce.Core.Entities.Delivery", b =>
                 {
-                    b.HasOne("QuickCommerce.Core.Entities.DeliveryPartner", "DeliveryPartner")
+                    b.HasOne("QuickCommerce.Core.Entities.DeliveryPartner", "ExternalAgent")
                         .WithMany("Deliveries")
-                        .HasForeignKey("DeliveryPartnerId")
+                        .HasForeignKey("AssignedToPartnerId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_deliveries_deliverypartners_deliverypartnerid");
+                        .HasConstraintName("fk_deliveries_deliverypartners_assignedtopartnerid");
+
+                    b.HasOne("QuickCommerce.Core.Entities.User", "InternalAgent")
+                        .WithMany()
+                        .HasForeignKey("AssignedToUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_deliveries_users_assignedtouserid");
 
                     b.HasOne("QuickCommerce.Core.Entities.Order", "Order")
                         .WithMany()
@@ -1191,7 +2171,9 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_deliveries_orders_orderid");
 
-                    b.Navigation("DeliveryPartner");
+                    b.Navigation("ExternalAgent");
+
+                    b.Navigation("InternalAgent");
 
                     b.Navigation("Order");
                 });
@@ -1200,10 +2182,10 @@ namespace QuickCommerce.Infrastructure.Migrations
                 {
                     b.HasOne("QuickCommerce.Core.Entities.DeliveryPartner", "DeliveryPartner")
                         .WithMany("Beats")
-                        .HasForeignKey("DeliveryPartnerId")
+                        .HasForeignKey("AssignedToPartnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_deliverypartnerbeats_deliverypartners_deliverypartnerid");
+                        .HasConstraintName("fk_deliverypartnerbeats_deliverypartners_assigned_to_partner_id");
 
                     b.Navigation("DeliveryPartner");
                 });
@@ -1222,11 +2204,32 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasForeignKey("StoreId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_inventory_movements_store_storeid");
+                        .HasConstraintName("fk_inventory_movements_store_store_id");
+
+                    b.HasOne("QuickCommerce.Core.Entities.StoreProduct", "StoreProduct")
+                        .WithMany()
+                        .HasForeignKey("StoreProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_inventory_movements_storeproducts_store_product_id");
 
                     b.Navigation("Product");
 
                     b.Navigation("Store");
+
+                    b.Navigation("StoreProduct");
+                });
+
+            modelBuilder.Entity("QuickCommerce.Core.Entities.NotificationRecipient", b =>
+                {
+                    b.HasOne("QuickCommerce.Core.Entities.Notification", "Notification")
+                        .WithMany("Recipients")
+                        .HasForeignKey("NotificationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_notification_recipients_notifications_notificationid");
+
+                    b.Navigation("Notification");
                 });
 
             modelBuilder.Entity("QuickCommerce.Core.Entities.Order", b =>
@@ -1278,6 +2281,30 @@ namespace QuickCommerce.Infrastructure.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("QuickCommerce.Core.Entities.OrderStatusHistory", b =>
+                {
+                    b.HasOne("QuickCommerce.Core.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_orderstatushistory_orders_orderid");
+
+                    b.Navigation("Order");
+                });
+
+            modelBuilder.Entity("QuickCommerce.Core.Entities.PasswordResetToken", b =>
+                {
+                    b.HasOne("QuickCommerce.Core.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_passwordresettokens_user_userid");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("QuickCommerce.Core.Entities.Product", b =>
                 {
                     b.HasOne("QuickCommerce.Core.Entities.Category", "Category")
@@ -1286,11 +2313,6 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_products_categories_categoryid");
-
-                    b.HasOne("QuickCommerce.Core.Entities.Store", null)
-                        .WithMany("Products")
-                        .HasForeignKey("StoreId")
-                        .HasConstraintName("fk_products_store_store_id");
 
                     b.Navigation("Category");
                 });
@@ -1302,7 +2324,7 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_refreshtokens_users_userid");
+                        .HasConstraintName("fk_refreshtokens_user_userid");
 
                     b.Navigation("User");
                 });
@@ -1328,33 +2350,21 @@ namespace QuickCommerce.Infrastructure.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("QuickCommerce.Core.Entities.Store", b =>
-                {
-                    b.HasOne("QuickCommerce.Core.Entities.Franchise", "Franchise")
-                        .WithMany("Stores")
-                        .HasForeignKey("FranchiseId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("fk_store_franchise_franchise_id");
-
-                    b.Navigation("Franchise");
-                });
-
-            modelBuilder.Entity("QuickCommerce.Core.Entities.StoreProductInventory", b =>
+            modelBuilder.Entity("QuickCommerce.Core.Entities.StoreProduct", b =>
                 {
                     b.HasOne("QuickCommerce.Core.Entities.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_store_product_inventory_products_productid");
+                        .HasConstraintName("fk_storeproducts_products_productid");
 
                     b.HasOne("QuickCommerce.Core.Entities.Store", "Store")
-                        .WithMany()
+                        .WithMany("StoreProducts")
                         .HasForeignKey("StoreId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_store_product_inventory_store_storeid");
+                        .HasConstraintName("fk_storeproducts_store_storeid");
 
                     b.Navigation("Product");
 
@@ -1375,7 +2385,7 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_user_role_users_user_id");
+                        .HasConstraintName("fk_user_role_user_user_id");
 
                     b.Navigation("Role");
 
@@ -1396,11 +2406,16 @@ namespace QuickCommerce.Infrastructure.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_user_stores_users_user_id");
+                        .HasConstraintName("fk_user_stores_user_user_id");
 
                     b.Navigation("Store");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("QuickCommerce.Core.Entities.Cart", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("QuickCommerce.Core.Entities.DeliveryPartner", b =>
@@ -1410,9 +2425,9 @@ namespace QuickCommerce.Infrastructure.Migrations
                     b.Navigation("Deliveries");
                 });
 
-            modelBuilder.Entity("QuickCommerce.Core.Entities.Franchise", b =>
+            modelBuilder.Entity("QuickCommerce.Core.Entities.Notification", b =>
                 {
-                    b.Navigation("Stores");
+                    b.Navigation("Recipients");
                 });
 
             modelBuilder.Entity("QuickCommerce.Core.Entities.Order", b =>
@@ -1436,15 +2451,13 @@ namespace QuickCommerce.Infrastructure.Migrations
                 {
                     b.Navigation("Orders");
 
-                    b.Navigation("Products");
+                    b.Navigation("StoreProducts");
 
                     b.Navigation("UserStores");
                 });
 
             modelBuilder.Entity("QuickCommerce.Core.Entities.User", b =>
                 {
-                    b.Navigation("ActivityLogs");
-
                     b.Navigation("UserRoles");
 
                     b.Navigation("UserStores");

@@ -27,59 +27,49 @@ namespace QuickCommerce.Infrastructure.Services
             if (pageNumber <= 0) pageNumber = 1;
             if (pageSize <= 0) pageSize = 10;
 
-            var baseQuery = _context.StoreProductInventories
+            // ✅ NEW STRUCTURE
+            var baseQuery = _context.StoreProducts
                 .AsNoTracking()
-                .Where(inv => inv.StoreId == storeId)
-                .Join(_context.Products.AsNoTracking(),
-                    inv => inv.ProductId,
-                    product => product.Id,
-                    (inv, product) => new { inv, product })
-                .Join(_context.Categories.AsNoTracking(),
-                    temp => temp.product.CategoryId,
-                    category => category.Id,
-                    (temp, category) => new
-                    {
-                        inventory = temp.inv,
-                        product = temp.product,
-                        category
-                    })
-                .Where(x => x.product.IsAvailable);
+                .Where(sp => sp.StoreId == storeId)
+                .Include(sp => sp.Product)
+                .ThenInclude(p => p.Category)
+                .Where(sp => sp.Product.IsAvailable);
 
             if (categoryId.HasValue)
             {
                 baseQuery = baseQuery
-                    .Where(x => x.product.CategoryId == categoryId.Value);
+                    .Where(sp => sp.Product.CategoryId == categoryId.Value);
             }
 
             if (!string.IsNullOrWhiteSpace(search))
             {
                 search = search.ToLower();
 
-                baseQuery = baseQuery.Where(x =>
-                    x.product.Name.ToLower().Contains(search) ||
-                    (x.product.SearchKeywords != null &&
-                     x.product.SearchKeywords.ToLower().Contains(search)));
+                baseQuery = baseQuery.Where(sp =>
+                    sp.Product.Name.ToLower().Contains(search) ||
+                    (sp.Product.SearchKeywords != null &&
+                     sp.Product.SearchKeywords.ToLower().Contains(search)));
             }
 
             var totalCount = await baseQuery.CountAsync();
 
             var items = await baseQuery
-                .OrderBy(x => x.product.Name)
+                .OrderBy(sp => sp.Product.Name)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
-                .Select(x => new StoreProductListDto
+                .Select(sp => new StoreProductListDto
                 {
-                    ProductId = x.product.Id,
-                    Name = x.product.Name,
-                    Description = x.product.Description,
-                    Price = x.product.Price,
-                    MRP = x.product.MRP,
-                    Unit = x.product.Unit,
-                    AvailableStock = x.inventory.Stock,
-                    IsLowStock = x.inventory.Stock <= x.inventory.LowStockThreshold,
-                    IsAvailable = x.inventory.Stock > 0,
-                    CategoryName = x.category.Name,
-                    ImageUrls = x.product.ImageUrls
+                    ProductId = sp.Product.Id,
+                    Name = sp.Product.Name,
+                    Description = sp.Product.Description,
+                    Price = sp.Product.Price,
+                    MRP = sp.Product.MRP,
+                    Unit = sp.Product.Unit,
+                    AvailableStock = sp.StockQuantity,
+                    IsLowStock = sp.StockQuantity <= sp.LowStockThreshold,
+                    IsAvailable = sp.StockQuantity > 0,
+                    CategoryName = sp.Product.Category.Name,
+                    ImageUrls = sp.Product.ImageUrls
                 })
                 .ToListAsync();
 

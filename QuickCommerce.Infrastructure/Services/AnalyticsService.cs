@@ -37,17 +37,9 @@ namespace QuickCommerce.Infrastructure.Services
                     (o.PaymentMode == "COD" && o.Status == "DELIVERED"))
                 .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
 
-            var averageOrderValue = ordersToday > 0
-                ? revenueToday / ordersToday
-                : 0;
-
             var cancelledCount = await ordersTodayQuery
                 .Where(o => o.Status == "CANCELLED")
                 .CountAsync();
-
-            var cancelRate = ordersToday > 0
-                ? (double)cancelledCount / ordersToday * 100
-                : 0;
 
             var pendingOrders = await _context.Orders.AsNoTracking()
                 .Where(o =>
@@ -58,15 +50,18 @@ namespace QuickCommerce.Infrastructure.Services
                     o.Status == "OUT_FOR_DELIVERY")
                 .CountAsync();
 
-            var lowStockProducts = await _context.StoreProductInventories
+            var lowStockProducts = await _context.StoreProducts
                 .AsNoTracking()
-                .Where(i => i.Stock <= i.LowStockThreshold)
+                .Where(i => i.StockQuantity <= i.LowStockThreshold)
                 .CountAsync();
 
             var activeCustomersToday = await ordersTodayQuery
                 .Select(o => o.CustomerId)
                 .Distinct()
                 .CountAsync();
+
+            decimal averageOrderValue = ordersToday > 0 ? revenueToday / ordersToday : 0;
+            double cancelRate = ordersToday > 0 ? (double)cancelledCount / ordersToday * 100 : 0;
 
             return new DashboardSummaryDto
             {
@@ -101,11 +96,11 @@ namespace QuickCommerce.Infrastructure.Services
                     (
                         o.PaymentStatus == "PAID" ||
                         (o.PaymentMode == "COD" && o.Status == "DELIVERED")
-                    )
-                );
+                    ));
 
             var totalRevenue = await baseQuery.SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
             var totalOrders = await baseQuery.CountAsync();
+
             var avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
             var trend = await baseQuery
@@ -148,8 +143,7 @@ namespace QuickCommerce.Infrastructure.Services
         // =========================================================
         public async Task<CustomerAnalyticsDto> GetCustomerAnalyticsAsync()
         {
-            var realizedOrders = _context.Orders
-                .AsNoTracking()
+            var realizedOrders = _context.Orders.AsNoTracking()
                 .Where(o =>
                     o.PaymentStatus == "PAID" ||
                     (o.PaymentMode == "COD" && o.Status == "DELIVERED"));
@@ -205,22 +199,19 @@ namespace QuickCommerce.Infrastructure.Services
                     (
                         o.PaymentStatus == "PAID" ||
                         (o.PaymentMode == "COD" && o.Status == "DELIVERED")
-                    )
-                );
+                    ));
 
             var productQuery =
                 from oi in _context.OrderItems.AsNoTracking()
                 join o in realizedOrders on oi.OrderId equals o.Id
-                group oi by oi.ProductId into g
+                join p in _context.Products on oi.ProductId equals p.Id
+                group new { oi, p } by new { p.Id, p.Name } into g
                 select new ProductAnalyticsItemDto
                 {
-                    ProductId = g.Key,
-                    ProductName = _context.Products
-                        .Where(p => p.Id == g.Key)
-                        .Select(p => p.Name)
-                        .FirstOrDefault() ?? "",
-                    QuantitySold = g.Sum(x => x.Quantity),
-                    Revenue = g.Sum(x => x.TotalPrice)
+                    ProductId = g.Key.Id,
+                    ProductName = g.Key.Name,
+                    QuantitySold = g.Sum(x => x.oi.Quantity),
+                    Revenue = g.Sum(x => x.oi.TotalPrice)
                 };
 
             var products = await productQuery
@@ -235,7 +226,7 @@ namespace QuickCommerce.Infrastructure.Services
         }
 
         // =========================================================
-        // INVENTORY ANALYTICS (Multi-Store Safe)
+        // INVENTORY ANALYTICS
         // =========================================================
         public async Task<InventoryAnalyticsDto> GetInventoryAnalyticsAsync(
             DateTime? from,
@@ -244,22 +235,22 @@ namespace QuickCommerce.Infrastructure.Services
         {
             int threshold = lowStockThreshold ?? 10;
 
-            var lowStockProducts = await _context.StoreProductInventories
+            var lowStockProducts = await _context.StoreProducts
                 .Include(i => i.Product)
                 .AsNoTracking()
-                .Where(i => i.Stock <= threshold)
+                .Where(i => i.StockQuantity <= threshold)
                 .Select(i => new LowStockDto
                 {
                     ProductId = i.ProductId,
                     ProductName = i.Product.Name,
-                    CurrentStock = i.Stock
+                    CurrentStock = i.StockQuantity
                 })
                 .ToListAsync();
 
-            var totalInventoryValue = await _context.StoreProductInventories
+            var totalInventoryValue = await _context.StoreProducts
                 .Include(i => i.Product)
                 .AsNoTracking()
-                .SumAsync(i => (decimal?)(i.Stock * i.Product.Price)) ?? 0;
+                .SumAsync(i => (decimal?)(i.StockQuantity * i.Product.Price)) ?? 0;
 
             return new InventoryAnalyticsDto
             {
@@ -275,9 +266,9 @@ namespace QuickCommerce.Infrastructure.Services
         // =========================================================
         public async Task<AlertAnalyticsDto> GetAlertAnalyticsAsync()
         {
-            var lowStockCritical = await _context.StoreProductInventories
+            var lowStockCritical = await _context.StoreProducts
                 .AsNoTracking()
-                .AnyAsync(i => i.Stock <= 5);
+                .AnyAsync(i => i.StockQuantity <= 5);
 
             return new AlertAnalyticsDto
             {

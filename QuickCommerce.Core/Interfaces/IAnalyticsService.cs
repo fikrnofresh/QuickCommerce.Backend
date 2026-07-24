@@ -1,4 +1,5 @@
 ﻿using QuickCommerce.Core.DTOs.Admin;
+using QuickCommerce.Core.DTOs.Analytics;
 using System;
 using System.Threading.Tasks;
 
@@ -6,17 +7,23 @@ namespace QuickCommerce.Core.Interfaces
 {
     public interface IAnalyticsService
     {
-        // Dashboard
+        // =============================
+        // DASHBOARD SUMMARY
+        // =============================
         Task<DashboardSummaryDto> GetDashboardSummaryAsync();
 
-        // Sales
+        // =============================
+        // SALES ANALYTICS
+        // =============================
         Task<SalesAnalyticsDto> GetSalesAnalyticsAsync(
             DateTime? from,
             DateTime? to,
             string? compare,
             string? groupBy);
 
-        // Product
+        // =============================
+        // PRODUCT ANALYTICS
+        // =============================
         Task<ProductAnalyticsDto> GetProductAnalyticsAsync(
             DateTime? from,
             DateTime? to,
@@ -24,16 +31,22 @@ namespace QuickCommerce.Core.Interfaces
             string? type,
             string? sortBy);
 
-        // Inventory
+        // =============================
+        // INVENTORY ANALYTICS
+        // =============================
         Task<InventoryAnalyticsDto> GetInventoryAnalyticsAsync(
             DateTime? from,
             DateTime? to,
             int? lowStockThreshold);
 
-        // Alerts
+        // =============================
+        // ALERT ANALYTICS
+        // =============================
         Task<AlertAnalyticsDto> GetAlertAnalyticsAsync();
-         
-        // Customer Intelligence
+
+        // =============================
+        // CUSTOMER INTELLIGENCE
+        // =============================
         Task<CustomerAnalyticsDto> GetCustomerAnalyticsAsync();
     }
 }

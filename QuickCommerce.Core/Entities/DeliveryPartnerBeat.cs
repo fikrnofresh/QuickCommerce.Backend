@@ -11,10 +11,10 @@ namespace QuickCommerce.Core.Entities
         [Column("id")]
         public int Id { get; set; }
 
-        [Column("deliverypartnerid")]
-        public int DeliveryPartnerId { get; set; }
+        [Column("AssignedToPartnerId")]
+        public int AssignedToPartnerId { get; set; }
 
-        [ForeignKey("DeliveryPartnerId")]
+        [ForeignKey("AssignedToPartnerId")]
         public DeliveryPartner DeliveryPartner { get; set; } = null!;
 
         [Column("beatname")]
