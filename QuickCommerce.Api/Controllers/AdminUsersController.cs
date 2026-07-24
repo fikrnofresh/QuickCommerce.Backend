@@ -31,9 +31,9 @@ namespace QuickCommerce.Api.Controllers.Admin
         // GET ALL USERS
         // =========================
         [HttpGet]
-        public async Task<IActionResult> GetUsers()
+        public async Task<IActionResult> GetUsers([FromQuery] AdminUserFilterDto filter)
         {
-            var result = await _service.GetAllAdminUsersAsync();
+            var result = await _service.GetAllAdminUsersAsync(filter);
             return Ok(result);
         }
 
